@@ -1,43 +1,57 @@
-const express = require('express');
-const fs = require('fs');
-const { Client } = require('pg');
-
-const configPath = './config.json';
-const parsedConf = JSON.parse(fs.readFileSync(configPath, 'UTF-8'));
-
-const client = new Client({
-  user: parsedConf.user,
-  database: parsedConf.database,
-  password: parsedConf.password
-});
-client.connect();
-const bodyParser = require('body-parser');
-
-const app = express();
-app.use(bodyParser.urlencoded({ extended: false }));
 
 
-
-app.post('/reading', async (req, res) => {
-  const temperatureReading = req.body.reading;
-  const sensorMACAddress = req.body.mac;
-
-  const sensorQuery = "SELECT sensor_id FROM sensors WHERE mac_address = $1 LIMIT 1;"
-  const sensorQueryRes = await client.query(sensorQuery, [sensorMACAddress]);
-  const sensorId = sensorQueryRes.rows[0].sensor_id;
-  console.log(`Sensor ID is ${sensorId}`);
-
-  console.log(temperatureReading, sensorMACAddress);
-  const readingInsertQuery = "INSERT INTO temperature_readings (sensor_id, reading) VALUES ($1, $2)";
-  const readingInsertRes = await client.query(readingInsertQuery, [sensorId, temperatureReading]);
-  console.log(readingInsertRes.rows);
-  res.sendStatus(204);
-});
-
-app.listen(3000, function(err) {
-  if (err) {
-    throw err;
+var getTemperatureData = new Promise (
+  (resolve, reject) => {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = () => {
+      if (req.readyState === XMLHttpRequest.DONE) {
+        if (req.status === 200) {
+          var res = JSON.parse(req.responseText);
+          resolve(res);
+        }
+      }
+    };
+    req.open('GET', '/readings');
+    req.send();
   }
+)
 
-  console.log('Server started on port 3000');
+
+getTemperatureData.then((values) => {
+  var graphData = [];
+  values.forEach((value) => {
+    graphData.push({x: value.timestamp, y: value.reading});
+  });
+
+  var timeseriesPlot = Vue.component('timeseries-plot', {
+    extends: VueChartJs.Line,
+    props: ['chartData', 'options'],
+    mixins: [VueChartJs.mixins.reactiveProp],
+    mounted () {
+      this.renderChart({
+        datasets: [{
+          label: 'Temperature',
+          data: graphData
+        }]
+      }, {
+        scales: {
+              xAxes: [{
+                  type: 'time',
+                  distribution: 'series'
+              }],
+              yAxes: [{
+                  min: 10,
+                  max: 30
+              }]
+          }
+      })
+    }
+  });
+
+  var app = new Vue({
+    el: '#temperature-plot',
+    components: {
+      timeseriesPlot
+    }
+  });
 });
