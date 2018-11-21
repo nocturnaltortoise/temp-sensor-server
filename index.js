@@ -26,7 +26,6 @@ getTemperatureData.then((values) => {
   var timeseriesPlot = Vue.component('timeseries-plot', {
     extends: VueChartJs.Line,
     props: ['chartData', 'options'],
-    mixins: [VueChartJs.mixins.reactiveProp],
     mounted () {
       this.renderChart({
         datasets: [{
@@ -34,6 +33,8 @@ getTemperatureData.then((values) => {
           data: graphData
         }]
       }, {
+        responsive: true,
+        maintainAspectRatio: false,
         scales: {
               xAxes: [{
                   type: 'time',
@@ -43,7 +44,7 @@ getTemperatureData.then((values) => {
                   min: 10,
                   max: 30
               }]
-          }
+          },
       })
     }
   });

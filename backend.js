@@ -35,7 +35,7 @@ app.post('/reading', async (req, res) => {
 });
 
 app.get('/readings', async (req, res) => {
-  const readingsQuery = "SELECT timestamp, reading FROM temperature_readings WHERE sensor_id = 1 LIMIT 10;"
+  const readingsQuery = "SELECT date_trunc('day', timestamp) AS timestamp, AVG(reading) AS reading FROM temperature_readings WHERE sensor_id = 1 GROUP BY date_trunc('day', timestamp) ORDER BY date_trunc('day', timestamp) DESC LIMIT 30;"
   const readings = await client.query(readingsQuery);
   res.send(readings.rows);
 });
