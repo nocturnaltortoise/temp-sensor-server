@@ -30,9 +30,15 @@ getTemperatureData.then((values) => {
       this.renderChart({
         datasets: [{
           label: 'Temperature',
-          data: graphData
+          data: graphData,
+          backgroundColor: "rgba(191, 127, 63, 0.3)"
         }]
       }, {
+        title: {
+          text: "Daily Average Temperature in Celsius",
+          display: true
+        },
+
         responsive: true,
         maintainAspectRatio: false,
         scales: {
