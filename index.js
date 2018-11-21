@@ -44,8 +44,10 @@ getTemperatureData.then((values) => {
         scales: {
               xAxes: [{
                   type: 'time',
-                  distribution: 'series',
-                  unit: 'day'
+                  time: {
+                    distribution: 'series',
+                    unit: 'day'
+                  }
               }],
               yAxes: [{
                   min: 10,
